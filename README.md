@@ -27,18 +27,20 @@ data.h5  (3 objects, 2 attributes)
 
 ## Usage
 ```bash
-usage: h5tree [-h] [-v] [-a] [-g] [-L [LEVEL]] [-p [PATTERN]] path
+usage: h5tree [-h] [-c] [-v] [-a] [-g] [-L [LEVEL]] [-p [PATTERN]] path [group]
 
 positional arguments:
-  path                  filepath/grouppath
+  path                  filepath
+  group                 group path (default: /)
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  -c, --color           colored output
   -v, --verbose         verbose output
   -a, --attributes      show attributes
   -g, --groups          only show groups
   -L [LEVEL], --level [LEVEL]
-                        maximum number of directories to recuse into
+                        maximum number of directories to recurse into
   -p [PATTERN], --pattern [PATTERN]
                         pattern
 ```
