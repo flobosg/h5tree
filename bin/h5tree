@@ -5,7 +5,6 @@
 
 import h5py
 import argparse
-from termcolor import colored
 from collections import defaultdict
 
 # globals
@@ -29,6 +28,7 @@ terminated = defaultdict(lambda: False)
 parser = argparse.ArgumentParser(prog='h5tree')
 parser.add_argument("path", type=str, help="filepath")
 parser.add_argument("group", nargs="?", type=str, default="/", help="group path (default: /)")
+parser.add_argument('-c', '--color', action='store_true', help='colored output')
 parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
 parser.add_argument('-a', '--attributes', action='store_true', help='show attributes')
 parser.add_argument('-g', '--groups', action='store_true', help='only show groups')
@@ -38,12 +38,17 @@ parser.add_argument('-p', '--pattern', nargs='?', type=str, help='pattern', defa
 # argcomplete.autocomplete(parser)
 args = parser.parse_args()
 
+if args.color: from termcolor import colored
+
+def if_color(string, color):
+    return colored(string, color) if args.color else string
+
 def str_count(n, name):
     """ return a string representing number of groups/datasets """
     if n != 1:
-        return "{} {}s".format(n, name)
+        return f"{n} {name}s"
     else:
-        return "{} {}".format(n, name)
+        return f"{n} {name}"
 
 def display_header(verbose = False):
     """ display the tree header """
@@ -57,9 +62,9 @@ def display_header(verbose = False):
         message = str_count(len(group), "object")
         if group.attrs:
             message += ", " + str_count(len(group.attrs), "attribute")
-        header += short_gap + "({})".format(message)
+        header += short_gap + f"({message})"
 
-    print(colored(header, group_color))
+    print(if_color(header, group_color))
 
 def display_attributes(group, n, verbose = False):
     """ display the attribute on a single line """
@@ -77,10 +82,10 @@ def display_attributes(group, n, verbose = False):
                 front_edit = front + L_branch
             else:
                 front_edit = front + T_branch
-            attr_output = front_edit + colored(attr, attr_color)
+            attr_output = front_edit + if_color(attr, attr_color)
 
             if verbose:
-                attr_output += colored(short_gap + str(group.attrs[attr]), None)
+                attr_output += if_color(short_gap + str(group.attrs[attr]), None)
             print(attr_output)
 
 def display(name, obj):
@@ -117,12 +122,12 @@ def display(name, obj):
 
     # is group
     if isinstance(obj, h5py.Group):
-        output = front + colored(subname, group_color)
+        output = front + if_color(subname, group_color)
         if args.verbose:
             message = str_count(len(obj), "object")
             if obj.attrs:
                 message += ", " + str_count(len(obj.attrs), "attribute")
-            output += colored(short_gap + '({})'.format(message), group_color)
+            output += if_color(short_gap + f"({message})", group_color)
 
         total_groups += 1
         print(output)
@@ -131,11 +136,11 @@ def display(name, obj):
     elif not args.groups:
         color = dataset_color
         if not obj.shape:
-            color = scalar_color 
-        output = front + colored(subname, dataset_color)
+            color = scalar_color
+        output = front + if_color(subname, dataset_color)
 
         if args.verbose:
-            output += short_gap + '{}, {}'.format(obj.shape, obj.dtype) 
+            output += short_gap + f"{obj.shape}, {obj.dtype}"
 
         total_datasets += 1
         print(output)
@@ -154,5 +159,5 @@ with h5py.File(args.path, 'r') as f:
     group.visititems(display)
 
 if args.verbose:
-    footer = '{}, {}'.format(str_count(total_groups, "group"), str_count(total_datasets, "dataset"))
+    footer = f"{str_count(total_groups, 'group')}, {str_count(total_datasets, 'dataset')}"
     print('\n', footer, sep='')
