@@ -27,7 +27,8 @@ terminated = defaultdict(lambda: False)
 
 # create the parser options
 parser = argparse.ArgumentParser(prog='h5tree')
-parser.add_argument("path", type=str, help="filepath/grouppath")
+parser.add_argument("path", type=str, help="filepath")
+parser.add_argument("group", nargs="?", type=str, default="/", help="group path (default: /)")
 parser.add_argument('-v', '--verbose', action='store_true', help='verbose output')
 parser.add_argument('-a', '--attributes', action='store_true', help='show attributes')
 parser.add_argument('-g', '--groups', action='store_true', help='only show groups')
@@ -36,16 +37,6 @@ parser.add_argument('-p', '--pattern', nargs='?', type=str, help='pattern', defa
 
 # argcomplete.autocomplete(parser)
 args = parser.parse_args()
-
-# parse the parsed input
-filepath = args.path
-locater = '.h5'
-sep_index = args.path.find(locater) + len(locater)
-
-filepath = args.path[:sep_index]
-grouppath = args.path[sep_index+1:]
-if not grouppath:
-    grouppath = "/"
 
 def str_count(n, name):
     """ return a string representing number of groups/datasets """
@@ -56,10 +47,11 @@ def str_count(n, name):
 
 def display_header(verbose = False):
     """ display the tree header """
-    if grouppath == "/":
-        header = filepath
+    if args.group == "/":
+        header = args.path
     else:
-        header = "{}/{}".format(filepath, grouppath)
+        sep = "/" if not args.group.startswith("/") else ""
+        header = f"{args.path}{sep}{args.group}"
 
     if verbose:
         message = str_count(len(group), "object")
@@ -153,8 +145,8 @@ def display(name, obj):
         display_attributes(obj, depth + 1, args.verbose)
 
 # open file and print tree
-with h5py.File(filepath, 'r') as f:
-    group = f[grouppath]
+with h5py.File(args.path, 'r') as f:
+    group = f[args.group]
     display_header(args.verbose)
     if args.attributes:
         display_attributes(group, 1, args.verbose)
